@@ -90,7 +90,8 @@ class Updater:
         logger.debug("Transforming XML to JSON")
         dictionary = {"items": {}}
 
-        names_overrides = {}
+        books_to_override = {}
+        books_really_overriden = set()
 
         with open(self.overriden_books_path) as fh:
             for line in fh:
@@ -100,26 +101,28 @@ class Updater:
                 items = line_clean.split("|")
                 original = items[0].strip()
                 override = items[1].strip()
-                if original in names_overrides:
+                if original in books_to_override:
                     logger.warning(
                         f"{original} present twice in overriden books settings file"
                     )
-                names_overrides[original] = override
+                books_to_override[original] = override
 
-        ignored_book_names = set()
+        books_to_ignore = set()
+        books_really_ignored = set()
 
         with open(self.ignored_books_path) as fh:
             for line in fh:
                 line_clean = line.strip()
                 if line_clean.startswith("#") or len(line_clean) == 0:
                     continue
-                ignored_book_names.add(line_clean)
+                books_to_ignore.add(line_clean)
 
         def create_fn(book):
             book_id = book.attrib["id"]
 
             name = book.attrib["name"]
-            if name in ignored_book_names:
+            if name in books_to_ignore:
+                books_really_ignored.add(name)
                 return
 
             flavour = None
@@ -143,8 +146,9 @@ class Updater:
             if category not in dictionary["items"].keys():
                 dictionary["items"][category] = {"items": {}}
 
-            if name in names_overrides:
-                name = names_overrides[name]
+            if name in books_to_override:
+                books_really_overriden.add(name)
+                name = books_to_override[name]
             if category == "phet":
                 parts = name.split("_")
                 if parts[0] != "phets":
@@ -262,6 +266,18 @@ class Updater:
 
         with open(self.json_library_path, "w") as fp:
             json.dump(dictionary, fp, indent=True)
+
+        for book_not_ignored in books_to_ignore - books_really_ignored:
+            logger.warning(
+                f"Book {book_not_ignored} is set to be ignored but absent from the"
+                "library"
+            )
+
+        for book_not_overiden in set(books_to_override.keys()) - books_really_overriden:
+            logger.warning(
+                f"Book {book_not_overiden} is set to be overriden but absent from the"
+                "library"
+            )
 
     def iter_books(self, func):
         with open(self.xml_library_path, "rb") as f:
