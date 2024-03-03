@@ -1,0 +1,45 @@
+services:
+  zimplorer:
+    build: ..
+    container_name: zp_zimplorer
+    volumes:
+      - ../backend/src/zimplorer:/usr/local/lib/python3.12/site-packages/zimplorer
+    command:
+      - uvicorn
+      - zimplorer.entrypoint:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "80"
+      - --reload
+      - --reload-dir
+      - /usr/local/lib/python3.12/site-packages/zimplorer
+    ports:
+      - 127.0.0.1:8000:80
+    environment:
+      PROCESSING_DISABLED: "True"
+      LOG_LEVEL: DEBUG
+      ALLOWED_ORIGINS: http://localhost:8001|http://127.0.0.1:8001
+  backend-tools:
+    build:
+      dockerfile: ../dev/backend-tools/Dockerfile
+      context: ../backend
+    container_name: zp_backend-tools
+    volumes:
+      - ../backend/src:/src/src
+      - ../backend/pyproject.toml:/src/pyproject.toml
+      - ../backend/htmlcov:/src/htmlcov
+      - ../backend/tasks.py:/src/tasks.py
+      - ../backend/tests:/src/tests
+    environment:
+      PROCESSING_DISABLED: "True"
+  frontend-tools:
+    build:
+      dockerfile: ../dev/frontend-tools/Dockerfile
+      context: ../frontend
+    container_name: zp_frontend-tools
+    volumes:
+      - ../frontend/public:/work/public
+      - ../frontend/src:/work/src
+    ports:
+      - 127.0.0.1:8001:5173

@@ -1,9 +1,9 @@
-import xml.etree.ElementTree as ET
-import hashlib
 import base64
-from pathlib import Path
 import functools
+import hashlib
 import json
+import xml.etree.ElementTree as ET
+from pathlib import Path
 
 favicon_hashes = []
 
@@ -283,10 +283,10 @@ def iter_books(func):
 
 count_books()
 
-if not favicons_path.exists():
-    extract_favicons()
-else:
-    print("Favicons already extracted")
+# if not favicons_path.exists():
+#     extract_favicons()
+# else:
+#     print("Favicons already extracted")
 
 create_json()
 # Open the XML file for streaming processing
