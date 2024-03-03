@@ -35,6 +35,8 @@ class Main:
                 xml_library_path=BackendConf.xml_library_path,
                 xml_library_url=BackendConf.xml_library_url,
                 http_timeout=BackendConf.http_timeout,
+                ignored_books_path=BackendConf.ignored_books_path,
+                overriden_books_path=BackendConf.overriden_books_path,
             )
 
             updater_task = create_task(self.run_updater())

@@ -4,6 +4,7 @@ services:
     container_name: zp_zimplorer
     volumes:
       - ../backend/src/zimplorer:/usr/local/lib/python3.12/site-packages/zimplorer
+      - ./settings:/data/settings
     command:
       - uvicorn
       - zimplorer.entrypoint:app

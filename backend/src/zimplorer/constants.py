@@ -48,3 +48,11 @@ class BackendConf:
     )
 
     http_timeout = int(os.getenv("HTTP_TIMEOUT", "60"))
+
+    ignored_books_path = pathlib.Path(
+        os.getenv("IGNORED_BOOKS_LOCATION", "/data/settings/books_ignored.txt")
+    )
+
+    overriden_books_path = pathlib.Path(
+        os.getenv("OVERRIDEN_BOOKS_LOCATION", "/data/settings/books_name_overrides.txt")
+    )

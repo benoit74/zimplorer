@@ -3,9 +3,9 @@ import functools
 import hashlib
 import json
 from pathlib import Path
-from defusedxml import ElementTree
 
 import requests
+from defusedxml import ElementTree
 
 from zimplorer.constants import logger
 
@@ -21,6 +21,8 @@ class Updater:
         xml_library_path: Path,
         xml_library_url: str,
         http_timeout: int,
+        ignored_books_path: Path,
+        overriden_books_path: Path,
     ) -> None:
         self.favicons_path = favicons_path
         self.json_library_path = json_library_path
@@ -29,6 +31,8 @@ class Updater:
         self.library_changed = False
         self.library_last_digest: str | None = None
         self.http_timeout = http_timeout
+        self.ignored_books_path = ignored_books_path
+        self.overriden_books_path = overriden_books_path
 
     def count_books(self):
 
@@ -86,115 +90,30 @@ class Updater:
         logger.debug("Transforming XML to JSON")
         dictionary = {"items": {}}
 
-        names_overrides = {
-            "los_miserables_audiobook_es": "los-miserables-audiobook_es",
-            "slam-out-loud_hi_PLmQc6HNAtCsoHGzlIzzYj1SI2vWFjr_F6": (
-                "slam-out-loud_hi_PLmQc6HNAtCsoHGzlIzzYj1SI2vWFjr-F6"
-            ),
-            "coopmaths": "coopmaths_fr",
-            "ted_en_global_issues": "ted_en_global-issues",
-            "ted_countdown_global": "ted_en_countdown",
-            # wikipedia: various selections with a space/underscore in selection
-            "wikipedia_ar_for_schools": "wikipedia_ar_for-schools",
-            "wikipedia_be-tarask_all": "wikipedia_be_all",
-            "wikipedia_de_climate_change": "wikipedia_de_climate-change",
-            "wikipedia_en_climate_change": "wikipedia_en_climate-change",
-            "wikipedia_en_for_schools": "wikipedia_en_for-schools",
-            "wikipedia_en_ice_hockey": "wikipedia_en_ice-hockey",
-            "wikipedia_en_indian_cinema": "wikipedia_en_indian-cinema",
-            "wikipedia_en_ray_charles": "wikipedia_en_ray-charles",
-            "wikipedia_en_simple_all": "wikipedia_en_simple-all",
-            "wikipedia_es_climate_change": "wikipedia_es_climate-change",
-            "wikipedia_fr_climate_change": "wikipedia_fr_climate-change",
-            "wikipedia_hi_indian_cinema": "wikipedia_hi_indian-cinema",
-            # wikipedia: few wrong languages
-            "wikipedia_map-bms_all": "wikipedia_jav_all",
-            "wikipedia_nds-nl_all": "wikipedia_nds_all",
-            "wikipedia_roa-tara_all": "wikipedia_roa_all",
-            # wikisource: we have two websites with the zh language
-            "wikisource_zh-min-nan_all": "wikisource_zh_zh-min-nan",
-            # wiktionary
-            "wiktionary_en_simple_all": "wiktionary_en_simple-words",
-            # None
-            "Prunelle_budding_authors_en": "prunelle_en_budding-authors",
-            "Ressources_pedagogiques_relatives_au_droit_auteur": (
-                "ressource-pedagogiques-relatives-au-droit-auteur_fr_all"
-            ),
-            "dse_ladakh_lbj": "dse-ladakh_lbj_all",
-            "la_chaine_de_maths_et_tiques_fr_all": (
-                "la-chaine-de-maths-et-tiques_fr_all"
-            ),
-            "prunelle_auteurs_en_herbe_fr": "prunelle_fr_budding-authors",
-            "prunelle_contes_africains_fr": "prunelle_fr_african-story",
-            "prunelle_draw_your_african_story_en": "prunelle_en_african-story",
-            "prunelle_interactive_books_en": "prunelle_en_interactive-books",
-            "prunelle_livres_interactifs_fr": "prunelle_fr_interactive-books",
-            "scienceinthebath_playlist-PL8NNmkST8IoKeba_t0iMtBMYNMnV-jsTn": (
-                "scienceinthebath_en_adventures-wonders"
-            ),
-            "scienceinthebath_playlist-PL8NNmkST8IoIq5W5AcFy1QgD6SVGbnwrJ": (
-                "scienceinthebath_en_assorted-nonsense"
-            ),
-            "scienceinthebath_playlist-PL8NNmkST8IoIqO5CT11b6e9e-HJoxplPe": (
-                "scienceinthebath_en_climate-nature-environment"
-            ),
-            "scienceinthebath_playlist-PL8NNmkST8IoI_L0_jKSpOKpd3131yG7Tr": (
-                "scienceinthebath_en_freshest-produce"
-            ),
-            "scienceinthebath_playlist-PL8NNmkST8IoIpVgmaxIvzPLK7zu1xYWiD": (
-                "scienceinthebath_en_m-films"
-            ),
-            "scienceinthebath_playlist-PL8NNmkST8IoK6keUR5BsUspBJJBzsOE5U": (
-                "scienceinthebath_en_science-in-the-bath"
-            ),
-            "thaki_ar_tech_tricks": "thaki_ar_tech-tricks",
-            "the_infosphere_en_all": "the-infosphere_en_all",
-            "voa_learning_en_all": "voa-learning_en_all",
-            "voa_learning_english-eim-english-in-a-minute": (
-                "voa-learning_en_english-in-a-minute"
-            ),
-            "voa_learning_english-everyday-grammar-tv": (
-                "voa-learning_en_everyday-grammar-tv"
-            ),
-            "voa_learning_english-how-to-pronounce": (
-                "voa-learning_en_how-to-pronounce"
-            ),
-            "voa_learning_english-let-s-learn-english": (
-                "voa-learning_en_let-s-learn-english-level-1"
-            ),
-            "voa_learning_english-let-s-learn-english-level-2": (
-                "voa-learning_en_let-s-learn-english-level-2"
-            ),
-            "voa_learning_english-let-s-teach-english": (
-                "voa-learning_en_let-s-teach-english"
-            ),
-            "voa_learning_english-news-literacy": "voa-learning_en_news-literacy",
-            "voa_learning_english-word-of-the-day": "voa-learning_en_word-of-the-day",
-            "madrasa_astronomy_ar_all": "madrasa-astronomy_ar_all",
-            "premiers_pas_avec_python_fr": "premiers-pas-avec-python_fr_all",
-        }
+        names_overrides = {}
 
-        ignored_book_names = [
-            "kiwix.korean.stackexchange.com",
-            "kiwix.portuguese.stackexchange.com",
-            "gutenberg_ale_all_2022-08",
-            "gutenberg_ang_all_2022-08",
-            "gutenberg_bgs_all_2022-08",
-            "gutenberg_brx_all_2022-07",
-            "gutenberg_csb_all_2022-07",
-            "gutenberg_grc_all_2022-07",
-            "gutenberg_kha_all_2022-05",
-            "gutenberg_kld_all_2022-08",
-            "gutenberg_ko_all_2022-08",
-            "gutenberg_nai_all_2022-08",
-            "gutenberg_nav_all_2022-05",
-            "phzh_core-arabic-one-test-zim_ar",
-            "phzh_core-dari-one",
-            "phzh_core-english-one_en",
-            "phzh_core-greek-one_el",
-            "phzh_core-italian-one_it",
-            "",
-        ]
+        with open(self.overriden_books_path) as fh:
+            for line in fh:
+                line_clean = line.strip()
+                if line_clean.startswith("#") or len(line_clean) == 0:
+                    continue
+                items = line_clean.split("|")
+                original = items[0].strip()
+                override = items[1].strip()
+                if original in names_overrides:
+                    logger.warning(
+                        f"{original} present twice in overriden books settings file"
+                    )
+                names_overrides[original] = override
+
+        ignored_book_names = set()
+
+        with open(self.ignored_books_path) as fh:
+            for line in fh:
+                line_clean = line.strip()
+                if line_clean.startswith("#") or len(line_clean) == 0:
+                    continue
+                ignored_book_names.add(line_clean)
 
         def create_fn(book):
             book_id = book.attrib["id"]

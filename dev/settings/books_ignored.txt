@@ -1,0 +1,11 @@
+#
+# This document lists all books that are present in library but must be ignore by Zimplorer
+#
+
+kiwix.korean.stackexchange.com
+kiwix.portuguese.stackexchange.com
+phzh_core-arabic-one-test-zim_ar
+phzh_core-dari-one
+phzh_core-english-one_en
+phzh_core-greek-one_el
+phzh_core-italian-one_it
