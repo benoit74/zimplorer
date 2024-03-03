@@ -91,22 +91,22 @@ def create_json():
         "wiktionary_en_simple_all": "wiktionary_en_simple-words",
         # None
         "Prunelle_budding_authors_en": "prunelle_en_budding-authors",
-        "Ressources_pedagogiques_relatives_au_droit_auteur" : "ressource-pedagogiques-relatives-au-droit-auteur_fr_all",
-        "dse_ladakh_lbj" : "dse-ladakh_lbj_all",
-        "la_chaine_de_maths_et_tiques_fr_all" : "la-chaine-de-maths-et-tiques_fr_all",
+        "Ressources_pedagogiques_relatives_au_droit_auteur": "ressource-pedagogiques-relatives-au-droit-auteur_fr_all",
+        "dse_ladakh_lbj": "dse-ladakh_lbj_all",
+        "la_chaine_de_maths_et_tiques_fr_all": "la-chaine-de-maths-et-tiques_fr_all",
         "prunelle_auteurs_en_herbe_fr": "prunelle_fr_budding-authors",
         "prunelle_contes_africains_fr": "prunelle_fr_african-story",
         "prunelle_draw_your_african_story_en": "prunelle_en_african-story",
         "prunelle_interactive_books_en": "prunelle_en_interactive-books",
         "prunelle_livres_interactifs_fr": "prunelle_fr_interactive-books",
-        "scienceinthebath_playlist-PL8NNmkST8IoKeba_t0iMtBMYNMnV-jsTn" : "scienceinthebath_en_adventures-wonders",
-        "scienceinthebath_playlist-PL8NNmkST8IoIq5W5AcFy1QgD6SVGbnwrJ" : "scienceinthebath_en_assorted-nonsense",
-        "scienceinthebath_playlist-PL8NNmkST8IoIqO5CT11b6e9e-HJoxplPe" : "scienceinthebath_en_climate-nature-environment",
-        "scienceinthebath_playlist-PL8NNmkST8IoI_L0_jKSpOKpd3131yG7Tr" : "scienceinthebath_en_freshest-produce",
-        "scienceinthebath_playlist-PL8NNmkST8IoIpVgmaxIvzPLK7zu1xYWiD" : "scienceinthebath_en_m-films",
-        "scienceinthebath_playlist-PL8NNmkST8IoK6keUR5BsUspBJJBzsOE5U" : "scienceinthebath_en_science-in-the-bath",
-        "thaki_ar_tech_tricks" : "thaki_ar_tech-tricks",
-        "the_infosphere_en_all" : "the-infosphere_en_all",
+        "scienceinthebath_playlist-PL8NNmkST8IoKeba_t0iMtBMYNMnV-jsTn": "scienceinthebath_en_adventures-wonders",
+        "scienceinthebath_playlist-PL8NNmkST8IoIq5W5AcFy1QgD6SVGbnwrJ": "scienceinthebath_en_assorted-nonsense",
+        "scienceinthebath_playlist-PL8NNmkST8IoIqO5CT11b6e9e-HJoxplPe": "scienceinthebath_en_climate-nature-environment",
+        "scienceinthebath_playlist-PL8NNmkST8IoI_L0_jKSpOKpd3131yG7Tr": "scienceinthebath_en_freshest-produce",
+        "scienceinthebath_playlist-PL8NNmkST8IoIpVgmaxIvzPLK7zu1xYWiD": "scienceinthebath_en_m-films",
+        "scienceinthebath_playlist-PL8NNmkST8IoK6keUR5BsUspBJJBzsOE5U": "scienceinthebath_en_science-in-the-bath",
+        "thaki_ar_tech_tricks": "thaki_ar_tech-tricks",
+        "the_infosphere_en_all": "the-infosphere_en_all",
         "voa_learning_en_all": "voa-learning_en_all",
         "voa_learning_english-eim-english-in-a-minute": "voa-learning_en_english-in-a-minute",
         "voa_learning_english-everyday-grammar-tv": "voa-learning_en_everyday-grammar-tv",
@@ -116,6 +116,8 @@ def create_json():
         "voa_learning_english-let-s-teach-english": "voa-learning_en_let-s-teach-english",
         "voa_learning_english-news-literacy": "voa-learning_en_news-literacy",
         "voa_learning_english-word-of-the-day": "voa-learning_en_word-of-the-day",
+        "madrasa_astronomy_ar_all": "madrasa-astronomy_ar_all",
+        "premiers_pas_avec_python_fr": "premiers-pas-avec-python_fr_all",
     }
 
     ignored_book_names = [
@@ -230,14 +232,12 @@ def create_json():
             else:
                 parts = name.split("_")
                 if len(parts) < 2 or len(parts) > 3:
-                    # print(f"Unexpected name length for book_id {book_id}: {name}")
-                    print(name)
+                    print(f"Unexpected name length for book_id {book_id}: {name}")
                     return
                 project = parts[0]
                 language = parts[1]
                 if len(language) > 3:
-                    # print(f"Unexpected name - lang - for book_id {book_id}: {name}")
-                    print(name)
+                    print(f"Unexpected name - lang - for book_id {book_id}: {name}")
                     return
                 if len(parts) == 3:
                     selection = parts[2]
