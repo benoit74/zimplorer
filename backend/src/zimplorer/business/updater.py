@@ -41,7 +41,7 @@ class Updater:
 
         count = [0]  # this is a hack to pass a mutable int
         self.iter_books(functools.partial(count_fn, count=count))
-        logger.debug(f"{count[0]} books found")
+        logger.debug(f"{count[0]} books present in library")
 
     def extract_favicons(self):
 
@@ -85,44 +85,17 @@ class Updater:
         del self.nb_total
         del self.favicons_found
 
-    def create_json(self):
+    def process_books(self):
 
         logger.debug("Transforming XML to JSON")
         dictionary = {"items": {}}
-
-        books_to_override = {}
-        books_really_overriden = set()
-
-        with open(self.overriden_books_path) as fh:
-            for line in fh:
-                line_clean = line.strip()
-                if line_clean.startswith("#") or len(line_clean) == 0:
-                    continue
-                items = line_clean.split("|")
-                original = items[0].strip()
-                override = items[1].strip()
-                if original in books_to_override:
-                    logger.warning(
-                        f"{original} present twice in overriden books settings file"
-                    )
-                books_to_override[original] = override
-
-        books_to_ignore = set()
-        books_really_ignored = set()
-
-        with open(self.ignored_books_path) as fh:
-            for line in fh:
-                line_clean = line.strip()
-                if line_clean.startswith("#") or len(line_clean) == 0:
-                    continue
-                books_to_ignore.add(line_clean)
 
         def create_fn(book):
             book_id = book.attrib["id"]
 
             name = book.attrib["name"]
-            if name in books_to_ignore:
-                books_really_ignored.add(name)
+            if name in self.books_to_ignore:
+                self.books_really_ignored.add(name)
                 return
 
             flavour = None
@@ -146,9 +119,9 @@ class Updater:
             if category not in dictionary["items"].keys():
                 dictionary["items"][category] = {"items": {}}
 
-            if name in books_to_override:
-                books_really_overriden.add(name)
-                name = books_to_override[name]
+            if name in self.books_to_override:
+                self.books_really_overriden.add(name)
+                name = self.books_to_override[name]
             if category == "phet":
                 parts = name.split("_")
                 if parts[0] != "phets":
@@ -267,18 +240,6 @@ class Updater:
         with open(self.json_library_path, "w") as fp:
             json.dump(dictionary, fp, indent=True)
 
-        for book_not_ignored in books_to_ignore - books_really_ignored:
-            logger.warning(
-                f"Book {book_not_ignored} is set to be ignored but absent from the"
-                "library"
-            )
-
-        for book_not_overiden in set(books_to_override.keys()) - books_really_overriden:
-            logger.warning(
-                f"Book {book_not_overiden} is set to be overriden but absent from the"
-                "library"
-            )
-
     def iter_books(self, func):
         with open(self.xml_library_path, "rb") as f:
             context = ElementTree.iterparse(f, events=("start", "end"))
@@ -306,7 +267,55 @@ class Updater:
                 for chunk in response.iter_content(chunk_size=CHUNCK_DOWNLOAD_SIZE):
                     fh.write(chunk)
 
+    def read_settings(self):
+
+        self.books_to_override = {}
+        self.books_really_overriden = set()
+
+        with open(self.overriden_books_path) as fh:
+            for line in fh:
+                line_clean = line.strip()
+                if line_clean.startswith("#") or len(line_clean) == 0:
+                    continue
+                items = line_clean.split("|")
+                original = items[0].strip()
+                override = items[1].strip()
+                if original in self.books_to_override:
+                    logger.warning(
+                        f"{original} present twice in overriden books settings file"
+                    )
+                self.books_to_override[original] = override
+
+        self.books_to_ignore = set()
+        self.books_really_ignored = set()
+
+        with open(self.ignored_books_path) as fh:
+            for line in fh:
+                line_clean = line.strip()
+                if line_clean.startswith("#") or len(line_clean) == 0:
+                    continue
+                self.books_to_ignore.add(line_clean)
+
+    def report_unused_settings(self):
+
+        for book_not_ignored in self.books_to_ignore - self.books_really_ignored:
+            logger.warning(
+                f"Book {book_not_ignored} is set to be ignored but absent from the"
+                "library"
+            )
+
+        for book_not_overiden in (
+            set(self.books_to_override.keys()) - self.books_really_overriden
+        ):
+            logger.warning(
+                f"Book {book_not_overiden} is set to be overriden but absent from the"
+                "library"
+            )
+
     def run(self):
+
+        self.read_settings()
+
         self.download_library()
 
         if not self.library_changed:
@@ -317,6 +326,8 @@ class Updater:
 
         self.extract_favicons()
 
-        self.create_json()
+        self.process_books()
 
-        logger.debug("Update done")
+        self.report_unused_settings()
+
+        logger.debug("Update DONE")
