@@ -1,5 +1,6 @@
+import functools
 import sys
-from asyncio import Task
+from asyncio import Task, create_task, sleep
 from contextlib import asynccontextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -12,6 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 
 from zimplorer import __about__
+from zimplorer.business.updater import Updater
 from zimplorer.constants import BackendConf, logger
 from zimplorer.routes import dummy
 
@@ -27,11 +29,34 @@ class Main:
         # Startup
         if BackendConf.processing_enabled:
             logger.info("Starting processing")
+            self.updater = Updater(
+                json_library_path=BackendConf.json_library_path,
+                favicons_path=BackendConf.favicons_path,
+                xml_library_path=BackendConf.xml_library_path,
+                xml_library_url=BackendConf.xml_library_url,
+                http_timeout=BackendConf.http_timeout,
+            )
+
+            updater_task = create_task(self.run_updater())
+            self.background_tasks.add(updater_task)
+            updater_task.add_done_callback(
+                functools.partial(self.task_stopped, "Updater")
+            )
         else:
             logger.warning("Processing is disabled")
         # Startup complete
         yield
         # Shutdown
+
+    async def run_updater(self):
+        """Run updater every 'updater_period_seconds' seconds"""
+        self.updater.run()
+        while True:
+            await sleep(BackendConf.updater_period_seconds)
+            try:
+                self.updater.run()
+            except Exception as exc:
+                logger.warning("Exception occured in updater run", exc_info=exc)
 
     def task_stopped(self, task_name: str, task: Task[Any]) -> None:
         if task.cancelled():

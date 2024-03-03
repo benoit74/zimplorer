@@ -31,7 +31,8 @@ COPY backend/*.md /src/
 # Install project + cleanup afterwards
 RUN pip install --no-cache-dir /src \
  && cd /src/src \
- && rm -rf /src
+ && rm -rf /src \
+ && mkdir -p /data
 
 COPY --from=zimplorer_ui /src/dist /src/ui
 

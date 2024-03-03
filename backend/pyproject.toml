@@ -8,12 +8,12 @@ requires-python = ">=3.12,<3.13"
 description = "Explore ZIM libraries with faceted search"
 readme = "README.md"
 dependencies = [
-  "requests==2.31.0",
+  "requests == 2.31.0",
   "fastapi[all] == 0.109.2",
   "fastapi-pagination == 0.12.14",
   "pydantic == 2.6.0", # this is also a sub-dep of fastapi but we rely a lot on it
-  "pyhumps==3.8.0",
-  "watchdog == 3.0.0",
+  "pyhumps == 3.8.0",
+  "defusedxml == 0.7.1",
 ]
 dynamic = ["authors", "classifiers", "keywords", "license", "version", "urls"]
 

@@ -6,7 +6,7 @@ from zimplorer.logging import get_logger
 src_dir = pathlib.Path(__file__).parent.resolve()
 
 logger = get_logger(
-    "offspot_metrics",
+    "zimplorer",
     level=os.getenv(
         "LOG_LEVEL",
         "INFO",
@@ -30,3 +30,21 @@ class BackendConf:
     processing_enabled = os.getenv("PROCESSING_DISABLED", "False").lower() != "true"
 
     ui_location = pathlib.Path(os.getenv("UI_LOCATION", "/src/ui"))
+
+    updater_period_seconds = int(os.getenv("UPDATER_PERIOD_SECONDS", "60"))
+
+    favicons_path = pathlib.Path(os.getenv("FAVICONS_LOCATION", "/data/favicons"))
+
+    json_library_path = pathlib.Path(
+        os.getenv("JSON_LIBRARY_LOCATION", "/data/library.json")
+    )
+
+    xml_library_path = pathlib.Path(
+        os.getenv("XML_LIBRARY_LOCATION", "/data/library.xml")
+    )
+
+    xml_library_url = os.getenv(
+        "XML_LIBRARY_URL", "https://download.kiwix.org/library/library_zim.xml"
+    )
+
+    http_timeout = int(os.getenv("HTTP_TIMEOUT", "60"))
