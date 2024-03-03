@@ -2,7 +2,9 @@ import base64
 import functools
 import hashlib
 import json
+from http import HTTPStatus
 from pathlib import Path
+from urllib.parse import urljoin
 
 import requests
 from defusedxml import ElementTree
@@ -23,6 +25,9 @@ class Updater:
         http_timeout: int,
         ignored_books_path: Path,
         overriden_books_path: Path,
+        meilisearch_url: str,
+        meilisearch_prod_index: str,
+        meilisearch_temp_index: str,
     ) -> None:
         self.favicons_path = favicons_path
         self.json_library_path = json_library_path
@@ -33,6 +38,9 @@ class Updater:
         self.http_timeout = http_timeout
         self.ignored_books_path = ignored_books_path
         self.overriden_books_path = overriden_books_path
+        self.meilisearch_url = meilisearch_url
+        self.meilisearch_prod_index = meilisearch_prod_index
+        self.meilisearch_temp_index = meilisearch_temp_index
 
     def count_books(self):
 
@@ -50,6 +58,7 @@ class Updater:
         self.nb_created = 0
         self.nb_total = 0
         self.nb_deleted = 0
+        self.favicons_match = {}
 
         def extract_fn(book):
             favicon_bytes = base64.b64decode(book.attrib["favicon"])
@@ -59,6 +68,7 @@ class Updater:
                     f"Unexpected favicon mime type encountered: {mime_type}"
                 )
             favicon_hash = hashlib.md5(favicon_bytes).hexdigest()  # noqa: S324
+            self.favicons_match[book.attrib["id"]] = favicon_hash
             favicon_path = self.favicons_path / f"{favicon_hash}.png"
             if favicon_path not in self.favicons_found:
                 self.favicons_found.append(favicon_path)
@@ -87,7 +97,8 @@ class Updater:
 
     def process_books(self):
 
-        logger.debug("Transforming XML to JSON")
+        logger.debug("Processing books to JSON/Search DB")
+        self.books_processed = 0
         dictionary = {"items": {}}
 
         def create_fn(book):
@@ -113,7 +124,7 @@ class Updater:
                 )
                 return
             if len(category_tags) == 0:
-                category = "None"
+                category = "--"
             else:
                 category = str(category_tags[0].split(":")[1])
             if category not in dictionary["items"].keys():
@@ -176,7 +187,7 @@ class Updater:
                     selection = parts[2]
                 else:
                     selection = "all"
-            elif category == "None":
+            elif category == "--":
                 if name.startswith("avanti-"):
                     project = "avanti"
                     language = "hi"
@@ -226,6 +237,43 @@ class Updater:
                 "flavour": flavour,
             }
 
+            def get_attrib_or_none(elem, key: str) -> str | None:
+                return elem.attrib[key] if key in elem.attrib else None
+
+            # Create index which has been selected
+            response = requests.post(
+                urljoin(
+                    self.meilisearch_url,
+                    f"/indexes/{self.meilisearch_prepare_index}/documents",
+                ),
+                json={
+                    "bookId": book_id,
+                    "project": project,
+                    "language": language,
+                    "selection": selection,
+                    "flavour": flavour,
+                    "category": None if category == "--" else category,
+                    "url": book.attrib["url"],
+                    "size": get_attrib_or_none(book, "size"),
+                    "mediaCount": get_attrib_or_none(book, "mediaCount"),
+                    "articleCount": get_attrib_or_none(book, "articleCount"),
+                    "title": get_attrib_or_none(book, "title"),
+                    "description": get_attrib_or_none(book, "description"),
+                    "creator": get_attrib_or_none(book, "creator"),
+                    "publisher": get_attrib_or_none(book, "publisher"),
+                    "tags": [
+                        tag
+                        for tag in (get_attrib_or_none(book, "tags") or "").split(";")
+                        if not tag.startswith("_")
+                    ],
+                    "favicon": self.favicons_match[book_id],
+                },
+                timeout=self.http_timeout,
+            )
+            response.raise_for_status()
+
+            self.books_processed += 1
+
         self.iter_books(create_fn)
 
         def count_items(a_dict):
@@ -239,6 +287,8 @@ class Updater:
 
         with open(self.json_library_path, "w") as fp:
             json.dump(dictionary, fp, indent=True)
+
+        logger.debug(f"{self.books_processed} books processed")
 
     def iter_books(self, func):
         with open(self.xml_library_path, "rb") as f:
@@ -312,9 +362,103 @@ class Updater:
                 "library"
             )
 
+    def prepare_database(self):
+
+        # Delete temp index if still here (could happen in case of previous failure)
+        response = requests.get(
+            urljoin(self.meilisearch_url, f"/indexes/{self.meilisearch_temp_index}"),
+            timeout=self.http_timeout,
+        )
+        if response.status_code == HTTPStatus.OK:
+            response = requests.delete(
+                urljoin(
+                    self.meilisearch_url, f"/indexes/{self.meilisearch_temp_index}"
+                ),
+                timeout=self.http_timeout,
+            )
+            response.raise_for_status()
+        elif response.status_code != HTTPStatus.NOT_FOUND:
+            response.raise_for_status()
+
+        # Select which index to use: prod first time, temp every next ones
+        response = requests.get(
+            urljoin(self.meilisearch_url, f"/indexes/{self.meilisearch_prod_index}"),
+            timeout=self.http_timeout,
+        )
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            self.meilisearch_prepare_index = self.meilisearch_prod_index
+        else:
+            response.raise_for_status()
+            self.meilisearch_prepare_index = self.meilisearch_temp_index
+
+        # Create index which has been selected
+        response = requests.post(
+            urljoin(self.meilisearch_url, "/indexes"),
+            json={
+                "uid": self.meilisearch_prepare_index,
+                "primaryKey": "bookId",
+            },
+            timeout=self.http_timeout,
+        )
+        response.raise_for_status()
+
+        # Configure index settings
+        response = requests.put(
+            urljoin(
+                self.meilisearch_url,
+                f"/indexes/{self.meilisearch_prepare_index}"
+                "/settings/filterable-attributes",
+            ),
+            json=[
+                "project",
+                "language",
+                "selection",
+                "flavour",
+                "category",
+                "size",
+                "mediaCount",
+                "articleCount",
+                "creator",
+                "publisher",
+                "tags",
+            ],
+            timeout=self.http_timeout,
+        )
+        response.raise_for_status()
+
+    def finish_database(self):
+
+        # If we worked directly on the prod index, nothing to do
+        if self.meilisearch_prepare_index == self.meilisearch_prod_index:
+            return
+
+        # Let's swap prod and temp indexes
+        response = requests.post(
+            urljoin(self.meilisearch_url, "/swap-indexes"),
+            json=[
+                {
+                    "indexes": [
+                        self.meilisearch_prod_index,
+                        self.meilisearch_temp_index,
+                    ]
+                }
+            ],
+            timeout=self.http_timeout,
+        )
+        response.raise_for_status()
+
+        # Delete temp index (which was the prod few moments ago)
+        response = requests.delete(
+            urljoin(self.meilisearch_url, f"/indexes/{self.meilisearch_temp_index}"),
+            timeout=self.http_timeout,
+        )
+        response.raise_for_status()
+
     def run(self):
 
         self.read_settings()
+
+        self.prepare_database()
 
         self.download_library()
 
@@ -327,6 +471,8 @@ class Updater:
         self.extract_favicons()
 
         self.process_books()
+
+        self.finish_database()
 
         self.report_unused_settings()
 

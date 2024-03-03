@@ -56,3 +56,7 @@ class BackendConf:
     overriden_books_path = pathlib.Path(
         os.getenv("OVERRIDEN_BOOKS_LOCATION", "/data/settings/books_name_overrides.txt")
     )
+
+    meilisearch_url = os.getenv("MEILISEARCH_URL")
+    meilisearch_prod_index = os.getenv("MEILISEARCH_PROD_INDEX", "books")
+    meilisearch_temp_index = os.getenv("MEILISEARCH_TEMP_INDEX", "books_new")

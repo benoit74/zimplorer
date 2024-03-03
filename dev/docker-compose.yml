@@ -21,6 +21,7 @@ services:
       PROCESSING_DISABLED: "True"
       LOG_LEVEL: DEBUG
       ALLOWED_ORIGINS: http://localhost:8001|http://127.0.0.1:8001
+      MEILISEARCH_URL: http://meilisearch:7700
   meilisearch:
     container_name: zp_meilisearch
     image: getmeili/meilisearch:v1.6

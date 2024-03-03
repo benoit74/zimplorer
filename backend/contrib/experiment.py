@@ -162,7 +162,7 @@ def create_json():
             print(f"Many categories found for book {book_id}")
             return
         if len(category_tags) == 0:
-            category = "None"
+            category = "--"
         else:
             category = str(category_tags[0].split(":")[1])
         if category not in dictionary["items"].keys():
@@ -212,7 +212,7 @@ def create_json():
                 selection = parts[2]
             else:
                 selection = "all"
-        elif category == "None":
+        elif category == "--":
             if name.startswith("avanti-"):
                 project = "avanti"
                 language = "hi"

@@ -29,6 +29,8 @@ class Main:
         # Startup
         if BackendConf.processing_enabled:
             logger.info("Starting processing")
+            if not BackendConf.meilisearch_url:
+                raise Exception("Please set the MEILISEARCH_URL environment variable")
             self.updater = Updater(
                 json_library_path=BackendConf.json_library_path,
                 favicons_path=BackendConf.favicons_path,
@@ -37,6 +39,9 @@ class Main:
                 http_timeout=BackendConf.http_timeout,
                 ignored_books_path=BackendConf.ignored_books_path,
                 overriden_books_path=BackendConf.overriden_books_path,
+                meilisearch_url=BackendConf.meilisearch_url,
+                meilisearch_prod_index=BackendConf.meilisearch_prod_index,
+                meilisearch_temp_index=BackendConf.meilisearch_temp_index,
             )
 
             updater_task = create_task(self.run_updater())
