@@ -20,6 +20,16 @@ services:
       PROCESSING_DISABLED: "True"
       LOG_LEVEL: DEBUG
       ALLOWED_ORIGINS: http://localhost:8001|http://127.0.0.1:8001
+  meilisearch:
+    container_name: zp_meilisearch
+    image: getmeili/meilisearch:v1.6
+    volumes:
+      - meili_data:/meili_data
+    # environment:
+    #   MEILI_MASTER_KEY: MASTER_KEY
+    command: ["meilisearch", "--env", "development"]
+    ports:
+      - 127.0.0.1:8002:7700
   backend-tools:
     build:
       dockerfile: ../dev/backend-tools/Dockerfile
@@ -43,3 +53,5 @@ services:
       - ../frontend/src:/work/src
     ports:
       - 127.0.0.1:8001:5173
+volumes:
+  meili_data:
