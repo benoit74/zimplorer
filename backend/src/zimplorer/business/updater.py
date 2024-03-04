@@ -237,8 +237,11 @@ class Updater:
                 "flavour": flavour,
             }
 
-            def get_attrib_or_none(elem, key: str) -> str | None:
-                return elem.attrib[key] if key in elem.attrib else None
+            def get_str_attrib_or_none(elem, key: str) -> str | None:
+                return str(elem.attrib[key]) if key in elem.attrib else None
+
+            def get_int_attrib_or_none(elem, key: str) -> int | None:
+                return int(elem.attrib[key]) if key in elem.attrib else None
 
             # Create index which has been selected
             response = requests.post(
@@ -254,16 +257,18 @@ class Updater:
                     "flavour": flavour,
                     "category": None if category == "--" else category,
                     "url": book.attrib["url"],
-                    "size": get_attrib_or_none(book, "size"),
-                    "mediaCount": get_attrib_or_none(book, "mediaCount"),
-                    "articleCount": get_attrib_or_none(book, "articleCount"),
-                    "title": get_attrib_or_none(book, "title"),
-                    "description": get_attrib_or_none(book, "description"),
-                    "creator": get_attrib_or_none(book, "creator"),
-                    "publisher": get_attrib_or_none(book, "publisher"),
+                    "size": get_int_attrib_or_none(book, "size"),
+                    "mediaCount": get_int_attrib_or_none(book, "mediaCount"),
+                    "articleCount": get_int_attrib_or_none(book, "articleCount"),
+                    "title": get_str_attrib_or_none(book, "title"),
+                    "description": get_str_attrib_or_none(book, "description"),
+                    "creator": get_str_attrib_or_none(book, "creator"),
+                    "publisher": get_str_attrib_or_none(book, "publisher"),
                     "tags": [
                         tag
-                        for tag in (get_attrib_or_none(book, "tags") or "").split(";")
+                        for tag in (get_str_attrib_or_none(book, "tags") or "").split(
+                            ";"
+                        )
                         if not tag.startswith("_")
                     ],
                     "favicon": self.favicons_match[book_id],
