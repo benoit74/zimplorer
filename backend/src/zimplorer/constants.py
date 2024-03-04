@@ -58,5 +58,6 @@ class BackendConf:
     )
 
     meilisearch_url = os.getenv("MEILISEARCH_URL")
+    meilisearch_url_safe = os.getenv("MEILISEARCH_URL", "")
     meilisearch_prod_index = os.getenv("MEILISEARCH_PROD_INDEX", "books")
     meilisearch_temp_index = os.getenv("MEILISEARCH_TEMP_INDEX", "books_new")

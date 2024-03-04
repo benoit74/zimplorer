@@ -15,7 +15,7 @@ from starlette.requests import Request
 from zimplorer import __about__
 from zimplorer.business.updater import Updater
 from zimplorer.constants import BackendConf, logger
-from zimplorer.routes import dummy
+from zimplorer.routes import dummy, search
 
 PREFIX = "/v1"
 
@@ -121,6 +121,7 @@ class Main:
         )
 
         api.include_router(router=dummy.router)
+        api.include_router(router=search.router)
 
         self.app.mount(f"/api/{__about__.__api_version__}", api)
 
