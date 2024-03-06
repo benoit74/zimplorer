@@ -1,20 +1,18 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { watch } from 'vue'
 import { useMainStore } from '../stores/main'
 import { storeToRefs } from 'pinia'
+import ProjectCard from '@/components/ProjectCard.vue'
 
 const store = useMainStore()
 const { query, projects } = storeToRefs(store)
-onMounted(() => {
-  store.fetchDummy()
-})
 
 watch(query, () => store.performSearch())
 </script>
 
 <template>
-  <v-app v-if="store.dummyValue" id="home">
+  <v-app id="home">
     <v-layout class="rounded rounded-md">
       <!--
       <v-app-bar title="Application bar"></v-app-bar>
@@ -53,9 +51,7 @@ watch(query, () => store.performSearch())
         <v-container v-if="projects">
           <v-row id="results">
             <v-col v-for="project in projects" :key="project.project" cols="4">
-              <v-card height="200"
-                >{{ project.project }} {{ project.books.length }}</v-card
-              >
+              <ProjectCard :project="project" />
             </v-col>
           </v-row>
         </v-container>
