@@ -45,10 +45,10 @@ class BookModel(CamelModel):
     size: int
     media_count: int
     article_count: int
-    title: str
-    description: str
-    creator: str
-    publisher: str
+    title: str | None = Field(default=None)
+    description: str | None = Field(default=None)
+    creator: str | None = Field(default=None)
+    publisher: str | None = Field(default=None)
     tags: list[str]
     favicon: str
 
@@ -76,18 +76,18 @@ class BookFacetStat(CamelModel):
 
 
 class BookFacetStats(CamelModel):
-    size: BookFacetStat
-    media_count: BookFacetStat
-    article_count: BookFacetStat
+    size: BookFacetStat | None = Field(default=None)
+    media_count: BookFacetStat | None = Field(default=None)
+    article_count: BookFacetStat | None = Field(default=None)
 
 
 class BookSearchResult(CamelModel):
     """A book search result"""
 
     hits: list[BookSearchHit]
-    offset: int
-    limit: int
-    estimated_total_hits: int
+    offset: int | None = Field(default=None)
+    limit: int | None = Field(default=None)
+    estimated_total_hits: int | None = Field(default=None)
     total_hits: int | None = Field(default=None)
     total_pages: int | None = Field(default=None)
     hits_per_page: int | None = Field(default=None)

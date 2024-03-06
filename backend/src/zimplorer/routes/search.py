@@ -23,7 +23,6 @@ router = APIRouter(
     },
 )
 async def search_book(item: SearchRequest) -> BookSearchResult:
-    logger.debug(f"PREPARE: {urljoin(BackendConf.meilisearch_url_safe, '/search')}")
     request = SearchRequest.model_dump(item, exclude_none=True, by_alias=True)
     request["facets"] = [
         "project",
