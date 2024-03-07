@@ -11,7 +11,7 @@ from defusedxml import ElementTree
 
 from zimplorer.constants import logger
 
-CHUNCK_DOWNLOAD_SIZE = 8096
+CHUNCK_DOWNLOAD_SIZE = 8192
 
 
 class Updater:
