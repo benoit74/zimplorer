@@ -167,6 +167,7 @@ class Updater:
                 "wikiversity",
                 "wikivoyage",
                 "wiktionary",
+                "ifixit",
             ):
                 parts = name.split("_")
                 if len(parts) < 2 or len(parts) > 3:  # noqa: PLR2004
