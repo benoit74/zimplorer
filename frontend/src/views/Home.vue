@@ -4,9 +4,10 @@ import { watch } from 'vue'
 import { useMainStore } from '../stores/main'
 import { storeToRefs } from 'pinia'
 import ProjectCard from '@/components/ProjectCard.vue'
+import ProjectDetailsCard from '@/components/ProjectDetailsCard.vue'
 
 const store = useMainStore()
-const { query, projects } = storeToRefs(store)
+const { query, projects, selectedProject } = storeToRefs(store)
 
 watch(query, () => store.performSearch())
 </script>
@@ -48,6 +49,14 @@ watch(query, () => store.performSearch())
           </div>
         </div>
 
+        <v-expand-transition>
+          <ProjectDetailsCard
+            v-show="selectedProject"
+            id="project"
+            :project="selectedProject"
+          />
+        </v-expand-transition>
+
         <v-container v-if="projects">
           <v-row id="results">
             <v-col v-for="project in projects" :key="project.project" cols="4">
@@ -82,6 +91,10 @@ watch(query, () => store.performSearch())
 }
 
 #results {
+  margin: 1em 10em 5em 10em;
+}
+
+#project {
   margin: 1em 10em 5em 10em;
 }
 </style>

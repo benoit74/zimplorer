@@ -3,6 +3,8 @@ import axios from 'axios'
 import SearchRequest from '../types/SearchRequest'
 import SearchResult from '../types/SearchResult'
 import Project from '@/types/Project'
+import Book from '@/types/Book'
+import SearchBook from '@/types/SearchBook'
 
 export type RootState = {
   isLoading: boolean
@@ -12,6 +14,27 @@ export type RootState = {
   query: string
   searchResult: SearchResult | null
   hitsLimitReached: boolean | null
+  selectedProject: Project | null
+}
+
+const getBookFromSearchBook = function (searchBook: SearchBook): Book {
+  return {
+    bookId: searchBook.bookId,
+    language: searchBook.language,
+    selection: searchBook.selection,
+    flavor: searchBook.flavor,
+    category: searchBook.category,
+    url: searchBook.url,
+    size: searchBook.size,
+    mediaCount: searchBook.mediaCount,
+    articleCount: searchBook.articleCount,
+    title: searchBook.title,
+    description: searchBook.description,
+    creator: searchBook.creator,
+    publisher: searchBook.publisher,
+    tags: searchBook.tags,
+    favicon: searchBook.favicon,
+  } as Book
 }
 
 export const useMainStore = defineStore('main', {
@@ -24,6 +47,7 @@ export const useMainStore = defineStore('main', {
       searchResult: null,
       hitsLimitReached: null,
       progress: 0,
+      selectedProject: null,
     }) as RootState,
   getters: {
     projects: (state) =>
@@ -32,21 +56,25 @@ export const useMainStore = defineStore('main', {
           (element) => element.project === currentValue.project,
         )
         if (project) {
-          project.books.push({ book_id: currentValue.book_id })
+          project.books.push(getBookFromSearchBook(currentValue))
         } else {
           accumulator.push({
             project: currentValue.project,
-            books: [{ book_id: currentValue.book_id }],
+            books: [getBookFromSearchBook(currentValue)],
           })
         }
         return accumulator
       }, [] as Project[]),
   },
   actions: {
+    selectProject(project: Project | null) {
+      this.selectedProject = project
+    },
     async performSearch() {
       if (this.query.length < 3) {
         return
       }
+      this.selectedProject = null
       this.isLoading = true
       this.progress = 0
       this.errorMessage = null
