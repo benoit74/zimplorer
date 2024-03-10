@@ -5,9 +5,10 @@ import { useMainStore } from '../stores/main'
 import { storeToRefs } from 'pinia'
 import ProjectCard from '@/components/ProjectCard.vue'
 import ProjectDetailsCard from '@/components/ProjectDetailsCard.vue'
+import FacetFilter from '@/components/FacetFilter.vue'
 
 const store = useMainStore()
-const { query, projects, selectedProject } = storeToRefs(store)
+const { query, projects, searchResult, selectedProject } = storeToRefs(store)
 
 watch(query, () => store.performSearch())
 </script>
@@ -17,15 +18,60 @@ watch(query, () => store.performSearch())
     <v-layout class="rounded rounded-md">
       <!--
       <v-app-bar title="Application bar"></v-app-bar>
+-->
 
       <v-navigation-drawer>
         <v-list>
-          <v-list-item title="Navigation drawer"></v-list-item>
-          <v-list-item title="Navigation drawer"></v-list-item>
-          <v-list-item title="Navigation drawer"></v-list-item>
+          <v-list-item v-if="searchResult?.facetDistribution">
+            <FacetFilter
+              title="Project"
+              :facet-data="searchResult?.facetDistribution?.project"
+            />
+          </v-list-item>
+          <v-list-item v-if="searchResult?.facetDistribution">
+            <FacetFilter
+              title="Language"
+              :facet-data="searchResult?.facetDistribution?.language"
+            />
+          </v-list-item>
+          <v-list-item v-if="searchResult?.facetDistribution">
+            <FacetFilter
+              title="Selection"
+              :facet-data="searchResult?.facetDistribution?.selection"
+            />
+          </v-list-item>
+          <v-list-item v-if="searchResult?.facetDistribution">
+            <FacetFilter
+              title="Flavour"
+              :facet-data="searchResult?.facetDistribution?.flavour"
+            />
+          </v-list-item>
+          <v-list-item v-if="searchResult?.facetDistribution">
+            <FacetFilter
+              title="Category"
+              :facet-data="searchResult?.facetDistribution?.category"
+            />
+          </v-list-item>
+          <v-list-item v-if="searchResult?.facetDistribution">
+            <FacetFilter
+              title="Creator"
+              :facet-data="searchResult?.facetDistribution?.creator"
+            />
+          </v-list-item>
+          <v-list-item v-if="searchResult?.facetDistribution">
+            <FacetFilter
+              title="Publisher"
+              :facet-data="searchResult?.facetDistribution?.publisher"
+            />
+          </v-list-item>
+          <v-list-item v-if="searchResult?.facetDistribution">
+            <FacetFilter
+              title="Tags"
+              :facet-data="searchResult?.facetDistribution?.tags"
+            />
+          </v-list-item>
         </v-list>
       </v-navigation-drawer>
--->
       <v-main
         class="d-flex flex-column"
         :scrollable="true"
@@ -51,6 +97,7 @@ watch(query, () => store.performSearch())
 
         <v-expand-transition>
           <ProjectDetailsCard
+            v-if="selectedProject"
             v-show="selectedProject"
             id="project"
             :project="selectedProject"
@@ -75,7 +122,7 @@ watch(query, () => store.performSearch())
 }
 
 #search {
-  margin-top: 10em;
+  margin-top: 2em;
   margin-bottom: 4em;
 }
 

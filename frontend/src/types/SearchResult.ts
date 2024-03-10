@@ -1,14 +1,16 @@
+import FacetDistribution from './FacetDistribution'
 import SearchBook from './SearchBook'
 /**
  * A book search result
  */
 export default interface SearchResult {
   hits: SearchBook[]
-  offset: number | undefined
-  limit: number | undefined
-  estimatedTotalHits: number | undefined
-  totalHits: number | undefined
-  totalPages: number | undefined
-  hitsPerPage: number | undefined
-  page: number | undefined
+  offset: number | null
+  limit: number | null
+  estimatedTotalHits: number | null
+  totalHits: number | null
+  totalPages: number | null
+  hitsPerPage: number | null
+  page: number | null
+  facetDistribution: FacetDistribution | null
 }
